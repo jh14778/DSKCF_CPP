@@ -60,7 +60,7 @@ public:
   }
 
   //TODO: Refactor this function into stages as given in the paper, plus my contribution
-  std::vector< Track > update( const cv::Mat3b & rgb, const cv::Mat1i & depth )
+  std::vector< Track > update( const cv::Mat3b & rgb, const cv::Mat1w & depth )
   {
     // Run the detector on the given frame
     std::vector< Track > result;
@@ -81,6 +81,13 @@ public:
     // Assign detections to tracks
     const std::size_t n = std::max< std::size_t >( tracks.size(), detections.size() );
     dlib::matrix< int > cost( n, n );
+    for( int a = 0; a < n; ++a )
+    {
+      for( int b = 0; b < n; ++b )
+      {
+        cost( a, b ) = 0;
+      }
+    }
     for( std::size_t i = 0; i < detections.size(); ++i )
     {
       for( std::size_t j = 0; j < tracks.size(); ++j )
@@ -137,6 +144,13 @@ public:
     // Evaluate suspeded tracks against unassigned detections
     const std::size_t m = std::max< std::size_t >( this->m_suspendedTrackers.size(), unassignedDetections.size() );
     dlib::matrix< int > tr_cost( m, m );
+    for( int a = 0; a < n; ++a )
+    {
+      for( int b = 0; b < n; ++b )
+      {
+        tr_cost( a, b ) = 0;
+      }
+    }
     for( std::size_t detectionIndex = 0; detectionIndex < unassignedDetections.size(); ++detectionIndex )
     {
       for( auto itr = this->m_suspendedTrackers.begin(); itr != this->m_suspendedTrackers.end(); ++itr )
@@ -164,15 +178,19 @@ public:
     std::for_each( tr_assignments.begin(), tr_threshold,
       [&]( const Assignment & assignment )
       {
-        auto itr = this->m_suspendedTrackers.begin();
-        std::advance( itr, assignment.trackIndex );
-        this->m_activeTrackers[ itr->first ] = {
-          unassignedDetections[ assignment.detectionIndex ], itr->second
-        };
-
-        if( auto rect = itr->second.update( rgb, depth, unassignedDetections[ assignment.detectionIndex ] ) )
+        if(  assignment.trackIndex < this->m_suspendedTrackers.size() )
         {
-          result.push_back( { itr->first, *rect } );
+          auto itr = this->m_suspendedTrackers.begin();
+
+          std::advance( itr, assignment.trackIndex );
+          this->m_activeTrackers[ itr->first ] = {
+            unassignedDetections[ assignment.detectionIndex ], itr->second
+          };
+
+          if( auto rect = itr->second.update( rgb, depth, unassignedDetections[ assignment.detectionIndex ] ) )
+          {
+            result.push_back( { itr->first, *rect } );
+          }
         }
       }
     );

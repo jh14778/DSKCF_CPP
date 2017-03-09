@@ -12,7 +12,7 @@ std::vector< Assignment > max_cost_assignment( const dlib::matrix< int > & cost 
 {
   const std::vector< long > assignment = dlib::max_cost_assignment( cost );
 
-  std::vector< Assignment > result( assignment.size() );
+  std::vector< Assignment > result;
 
   for( std::size_t a_index = 0; a_index < assignment.size(); ++a_index )
   {

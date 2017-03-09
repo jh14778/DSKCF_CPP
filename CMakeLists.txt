@@ -34,7 +34,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 # add c++11 support
 if(CMAKE_COMPILER_IS_GNUCC)
-    ADD_DEFINITIONS ( -std=c++14 -Wall )
+    ADD_DEFINITIONS ( -std=c++14 -Wall -ffast-math -O3 )
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 # add OpenCV
@@ -53,8 +53,10 @@ find_package(TBB REQUIRED)
 set(CF_TCLAP_DIR "src/3rdparty/tclap")
 set(CF_CV_EXT_DIR "src/3rdparty/cv_ext")
 set(CF_PIOTR_DIR "src/3rdparty/piotr")
-
 include_directories(${OpenCV_DIR}/include)
+include_directories(/usr/include/openni2)
+include_directories(/usr/include/nite)
+include_directories(/usr/local/include/XnLib)
 include_directories(${TBB_INCLUDE_DIRS})
 include_directories(${CF_TCLAP_DIR}
                     ${CF_CV_EXT_DIR}
@@ -156,6 +158,8 @@ add_executable(sorttr
   src/sorttr/SORTTR.hpp
   src/sorttr/SORTTR.cpp
   src/sorttr/transform_if.hpp
+  src/sorttr/Camera.hpp
+  src/sorttr/Camera.cpp
   src/cf_libs/kcf/kcf_debug.hpp
   src/cf_libs/kcf/kcf_tracker.hpp
   src/cf_libs/dskcf/dskcf_tracker_run.cpp
@@ -203,4 +207,4 @@ add_executable(sorttr
 
 set(TBB_LIBRARIES optimized ${TBB_LIBRARY} ${TBB_tbb_LIBRARY_RELEASE} debug ${TBB_tbb_LIBRARY_DEBUG})
 target_link_libraries(DSKCFcpp ${OpenCV_LIBS} ${TBB_LIBRARIES})
-target_link_libraries(sorttr ${OpenCV_LIBS} ${TBB_LIBRARIES} dlib)
+target_link_libraries(sorttr ${OpenCV_LIBS} ${TBB_LIBRARIES} dlib OpenNI2 NiTE2 XnLib)
