@@ -19,42 +19,32 @@ DskcfTracker::~DskcfTracker()
 {
 }
 
-bool DskcfTracker::update(const std::array< cv::Mat, 2 > & frame, Rect & boundingBox)
+float DskcfTracker::detect( const std::array< cv::Mat, 2 > & frame, cv::Rect_< double > & boundingBox )
 {
-	Point position = centerPoint(boundingBox);
+	Point position = centerPoint( boundingBox );
 
-	boundingBox = (this->m_occlusionHandler->detect(frame, position));
-
-	position = centerPoint(boundingBox);
-
-	this->m_occlusionHandler->update(frame, position);
-
-	return !this->m_occlusionHandler->isOccluded();
+	return this->m_occlusionHandler->score( frame, position );
 }
 
-bool DskcfTracker::update(const std::array< cv::Mat, 2 > & frame, cv::Rect_<double>& boundingBox, std::vector<int64> &timePerformanceVector)
-
+bool DskcfTracker::update(const std::array< cv::Mat, 2 > & frame, Rect & boundingBox)
 {
-	int64 tStart = cv::getTickCount();
+	Point position = centerPoint( boundingBox );
 
-	Point position = centerPoint(boundingBox);
+	if( auto bb = this->m_occlusionHandler->detect( frame, position ) )
+	{
+		boundingBox = *bb;
+		position = centerPoint( boundingBox );
+		this->m_occlusionHandler->update( frame, position );
 
-	boundingBox = (this->m_occlusionHandler->detect(frame, position));
+		return static_cast< bool >( bb );
+	}
+	else
+	{
+		return static_cast< bool >( bb );
+	}
 
-	position = centerPoint(boundingBox);
-
-	this->m_occlusionHandler->update(frame, position);
-
-	int64 tStop = cv::getTickCount();
-
-	int lastElement = (int)timePerformanceVector.size() - 1;
-	timePerformanceVector = this->m_occlusionHandler->singleFrameProTime;
-	//re-init the vector
-	this->m_occlusionHandler->singleFrameProTime = std::vector<int64>(8, 0);
-	timePerformanceVector[lastElement] = tStop - tStart;
-
-	return !this->m_occlusionHandler->isOccluded();
-
+	//return !this->m_occlusionHandler->isOccluded();
+	//return true;
 }
 
 bool DskcfTracker::reinit(const std::array< cv::Mat, 2 > & frame, Rect & boundingBox)

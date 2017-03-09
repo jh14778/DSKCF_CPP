@@ -101,7 +101,7 @@ TrackerRun::~TrackerRun()
   {
     _resultsFileTime.close();
   }
-  
+
   if (_tracker)
   {
     delete _tracker;
@@ -114,7 +114,7 @@ TrackerRun::~TrackerRun()
   {
 	  std::cout << i << "," << this->frameTime[ i ] << std::endl;
   }
-  
+
   std::cout << "min," << *std::min_element( this->frameTime.begin(), this->frameTime.end() ) << std::endl;
   std::cout << "min," << *std::max_element( this->frameTime.begin(), this->frameTime.end() ) << std::endl;
   std::cout << "mean," << std::accumulate( this->frameTime.begin(), this->frameTime.end(), 0.0 ) / static_cast< double >( this->frameTime.size() ) << std::endl;
@@ -463,16 +463,16 @@ bool TrackerRun::update()
 			_boundingBox.width / SCALE, _boundingBox.height / SCALE
 		);
 
-	
+
 	//Tracker Running HERE
 	 std::vector<int64> singleFrameTiming(8);
 	 //little value
 	 for(int i=0; i<singleFrameTiming.size()-1; i++)
 	 {
-		singleFrameTiming[i]=i+1;	
+		singleFrameTiming[i]=i+1;
 	 }
 
-    _targetOnFrame = _tracker->update(resized, r,singleFrameTiming);
+    _targetOnFrame = _tracker->update(resized, r);
 	 printResultsTiming(singleFrameTiming);
 
 		_boundingBox.x = r.x * SCALE;
@@ -632,9 +632,9 @@ void TrackerRun::printResultsTiming(const std::vector<int64> &singleFrameTiming)
     for(int i=0; i<singleFrameTiming.size(); i++)
     {
 		double elapsedTime=0;
-		
+
 		if(singleFrameTiming[i]!=0)
-			elapsedTime = static_cast< double >( singleFrameTiming[i] ) / fticks;	
+			elapsedTime = static_cast< double >( singleFrameTiming[i] ) / fticks;
 		_resultsFileTime << elapsedTime << " ";
 	}
 	_resultsFileTime << endl;

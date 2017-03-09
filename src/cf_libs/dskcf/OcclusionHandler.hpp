@@ -44,6 +44,7 @@ DS-KCF: A ~real-time tracker for RGB-D data, Journal of Real-Time Image Processi
 #include <array>
 #include <vector>
 
+#include <boost/optional.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/traits.hpp>
@@ -58,15 +59,6 @@ DS-KCF: A ~real-time tracker for RGB-D data, Journal of Real-Time Image Processi
 #include "kcf_tracker.hpp"
 #include "ScaleChangeObserver.hpp"
 #include "FeatureChannelProcessor.hpp"
-
-
-struct ThreadResult
-{
-  double score;
-  std::vector< cv::Point_< double > >::iterator value;
-
-  const bool operator<( const ThreadResult & rval ) const;
-};
 
 /**
  * A wrapper class around a pair of trackers, one for the target object and another for the occluding object.
@@ -101,7 +93,9 @@ public:
    *
    * @returns The new bounding box of the target object or the occluder.
    */
-  const Rect detect( const std::array< cv::Mat, 2 > & frame, const Point & position );
+  const boost::optional< Rect > detect( const std::array< cv::Mat, 2 > & frame, const Point & position );
+
+  const float score( const std::array< cv::Mat, 2 > & frame, const Point & position );
 
   /**
    * Update the tracker's model
@@ -113,12 +107,9 @@ public:
 
   virtual void onScaleChange( const Size & targetSize, const Size & windowSize, const cv::Mat2d & yf, const cv::Mat1d & cosineWindow );
 
-  const bool isOccluded() const;
-
   std::vector<int64> singleFrameProTime;
 
 private:
-  bool m_isOccluded;
   std::shared_ptr< FeatureChannelProcessor > m_featureProcessor;
   std::shared_ptr< FeatureExtractor > m_featureExtractor;
   std::shared_ptr< DepthSegmenter > m_depthSegmenter;
@@ -141,7 +132,6 @@ private:
   double m_targetDepthSTD;
 
   std::array< std::shared_ptr< DepthWeightKCFTracker >, 2 > m_targetTracker;
-  std::shared_ptr< KcfTracker > m_occluderTracker;
   KalmanFilter2D m_filter;
 
   /**
@@ -152,7 +142,7 @@ private:
    *
    * @returns The maximum response of the tracker.
    */
-  const Rect visibleDetect( const std::array< cv::Mat, 2 > & frame, const Point & position );
+  const boost::optional< Rect > visibleDetect( const std::array< cv::Mat, 2 > & frame, const Point & position );
 
   /**
    * Update the tracker's model
@@ -196,8 +186,8 @@ private:
    /**
    * Called to select the segmented occluder region
    *
-   * @param occluderMask binary mask containing the segmented occluder 
-   * @param minimumArea minimun area required by an object in order to be considered as occluder 
+   * @param occluderMask binary mask containing the segmented occluder
+   * @param minimumArea minimun area required by an object in order to be considered as occluder
    * @param[in,out] boundingBox The occluding object's bounding box.
    */
   const Rect selectOccludingRegion(const cv::Mat1b & occluderMask,int minimumArea,  const Rect &targetBB);
@@ -242,7 +232,7 @@ private:
   * @param histogram The histogram of depth frequency
   * @param objectBin The first bin in the histogram which belongs to the object
   * @param maxResponse The maximum response from the KCF tracker
-  * @param totalArea area of the tracking patch 
+  * @param totalArea area of the tracking patch
   *
   * @returns True if the target object has been occluded
   */
@@ -259,7 +249,6 @@ private:
    */
   bool evaluateVisibility( const DepthHistogram & histogram, const int objectBin, const double maxResponse )const;
 
-
   /**
    * Implements the Φ operator used in equation (11) and (13) in \cite DSKCF
    *
@@ -271,8 +260,8 @@ private:
   double phi( const DepthHistogram & histogram, const int objectBin )const;
   double phi( const DepthHistogram & histogram, const int objectBin, const double totalArea )const;
   void initialiseOccluder( const cv::Mat & frame, const cv::Rect_< double > occluderBB );
-  ThreadResult scoreCandidate( const std::array< cv::Mat, 2 > & frame, std::vector< cv::Point_< double > >::iterator iterator ) const;
-  ThreadResult scoreCandidate( const std::array< cv::Mat, 2 > & frame, std::vector< cv::Point_< double > >::iterator iterator,float &candidateCenterDepth ) const;
+  //ThreadResult scoreCandidate( const std::array< cv::Mat, 2 > & frame, std::vector< cv::Point_< double > >::iterator iterator ) const;
+  //ThreadResult scoreCandidate( const std::array< cv::Mat, 2 > & frame, std::vector< cv::Point_< double > >::iterator iterator,float &candidateCenterDepth ) const;
 };
 
 #endif

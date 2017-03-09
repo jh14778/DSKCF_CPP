@@ -34,7 +34,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 # add c++11 support
 if(CMAKE_COMPILER_IS_GNUCC)
-    ADD_DEFINITIONS ( -std=c++11 -Wall )
+    ADD_DEFINITIONS ( -std=c++14 -Wall )
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 # add OpenCV
@@ -60,18 +60,21 @@ include_directories(${CF_TCLAP_DIR}
                     ${CF_CV_EXT_DIR}
                     ${CF_PIOTR_DIR}
                     ${CF_PIOTR_DIR}/src
-                    src/main)
+                    src/main
+)
 
 include_directories(src/cf_libs/kcf
                     src/cf_libs/dsst
                     src/cf_libs/common
-                    src/cf_libs/dskcf)
+                    src/cf_libs/dskcf
+)
 
 set(CF_PIOTR_SOURCES
     ${CF_PIOTR_DIR}/gradientMex.hpp
     ${CF_PIOTR_DIR}/src/gradientMex.cpp
     ${CF_PIOTR_DIR}/src/sse.hpp
-    ${CF_PIOTR_DIR}/src/wrappers.hpp)
+    ${CF_PIOTR_DIR}/src/wrappers.hpp
+)
 
 set(CF_LIB_COMMON_SOURCES
     src/cf_libs/common/feature_channels.hpp
@@ -88,7 +91,8 @@ set(CF_LIB_COMMON_SOURCES
     ${CF_CV_EXT_DIR}/math_spectrums.cpp
     ${CF_CV_EXT_DIR}/math_spectrums.hpp
     ${CF_CV_EXT_DIR}/psr.hpp
-    ${CF_PIOTR_SOURCES})
+    ${CF_PIOTR_SOURCES}
+)
 
 set(CF_MAIN_SOURCES
     src/main/image_acquisition.hpp
@@ -97,7 +101,8 @@ set(CF_MAIN_SOURCES
     ${CF_CV_EXT_DIR}/init_box_selector.cpp
     ${CF_CV_EXT_DIR}/tracker_run.hpp
     ${CF_CV_EXT_DIR}/tracker_run.cpp
-    ${CF_TCLAP_DIR}/tclap/CmdLine.h)
+    ${CF_TCLAP_DIR}/tclap/CmdLine.h
+)
 
 add_executable(DSKCFcpp
     src/main/main_dskcf.cpp
@@ -143,23 +148,59 @@ add_executable(DSKCFcpp
     src/cf_libs/kcf/DepthWeightKCFTracker.cpp
     src/cf_libs/kcf/DepthWeightKCFTracker.h
     ${CF_MAIN_SOURCES}
-    ${CF_LIB_COMMON_SOURCES})
-	
+    ${CF_LIB_COMMON_SOURCES}
+)
 
-#set_property(TARGET ${TBB_LIBRARIES} PROPERTY DBG_POSTFIX _debug)
-#message("BUILD TYPE = '${CMAKE_BUILD_TYPE}'")
-#target_link_libraries( DSKCFcpp ${OpenCV_LIBS} optimized ${TBB_tbb_LIBRARY_RELEASE} debug ${TBB_tbb_LIBRARY_RELEASE})
-#target_link_libraries( DSKCFcpp ${OpenCV_LIBS} optimized ${TBB_tbb_LIBRARY_RELEASE})
-#target_link_libraries( DSKCFcpp ${OpenCV_LIBS} debug ${TBB_tbb_LIBRARY_RELEASE})
+add_executable(sorttr
+  src/sorttr/main.cpp
+  src/sorttr/SORTTR.hpp
+  src/sorttr/SORTTR.cpp
+  src/sorttr/transform_if.hpp
+  src/cf_libs/kcf/kcf_debug.hpp
+  src/cf_libs/kcf/kcf_tracker.hpp
+  src/cf_libs/dskcf/dskcf_tracker_run.cpp
+  src/cf_libs/dskcf/dskcf_tracker_run.hpp
+  src/cf_libs/dskcf/dskcf_tracker.cpp
+  src/cf_libs/dskcf/dskcf_tracker.hpp
+  src/cf_libs/dskcf/DepthSegmenter.cpp
+  src/cf_libs/dskcf/DepthSegmenter.hpp
+  src/cf_libs/dskcf/FeatureExtractor.cpp
+  src/cf_libs/dskcf/FeatureExtractor.hpp
+  src/cf_libs/dskcf/FeatureChannelProcessor.hpp
+  src/cf_libs/dskcf/OcclusionHandler.cpp
+  src/cf_libs/dskcf/OcclusionHandler.hpp
+  src/cf_libs/dskcf/ScaleAnalyser.cpp
+  src/cf_libs/dskcf/ScaleAnalyser.hpp
+  src/cf_libs/dskcf/ScaleChangeObserver.hpp
+  src/cf_libs/kcf/GaussianKernel.cpp
+  src/cf_libs/kcf/GaussianKernel.hpp
+  src/cf_libs/kcf/HOGFeatureExtractor.cpp
+  src/cf_libs/kcf/HOGFeatureExtractor.hpp
+  src/cf_libs/kcf/Kernel.hpp
+  src/cf_libs/kcf/Kernel.cpp
+  src/cf_libs/kcf/kcf_tracker.hpp
+  src/cf_libs/kcf/kcf_tracker.cpp
+  src/cf_libs/dskcf/LinearFeatureChannelProcessor.cpp
+  src/cf_libs/dskcf/LinearFeatureChannelProcessor.h
+  src/cf_libs/dskcf/ConcatenateFeatureChannelProcessor.cpp
+  src/cf_libs/dskcf/ConcatenateFeatureChannelProcessor.h
+  src/cf_libs/dskcf/ColourFeatureChannelProcessor.cpp
+  src/cf_libs/dskcf/ColourFeatureChannelProcessor.h
+  src/cf_libs/dskcf/DepthFeatureChannelProcessor.cpp
+  src/cf_libs/dskcf/DepthFeatureChannelProcessor.h
+  src/cf_libs/common/KalmanFilter2D.cpp
+  src/cf_libs/common/KalmanFilter2D.h
+  src/cf_libs/common/circularbuffer.hpp
+  src/cf_libs/common/KalmanFilter1D.cpp
+  src/cf_libs/common/KalmanFilter1D.h
+  src/cf_libs/common/DepthHistogram.cpp
+  src/cf_libs/common/DepthHistogram.h
+  src/cf_libs/kcf/DepthWeightKCFTracker.cpp
+  src/cf_libs/kcf/DepthWeightKCFTracker.h
+  ${CF_MAIN_SOURCES}
+  ${CF_LIB_COMMON_SOURCES}
+)
 
 set(TBB_LIBRARIES optimized ${TBB_LIBRARY} ${TBB_tbb_LIBRARY_RELEASE} debug ${TBB_tbb_LIBRARY_DEBUG})
-message("FINALLL TBB_LIBRARIES = '${TBB_LIBRARIES}'")
 target_link_libraries(DSKCFcpp ${OpenCV_LIBS} ${TBB_LIBRARIES})
-#IF(CMAKE_BUILD_TYPE MATCHES Release)
-#	message("RELEASE")
-#    target_link_libraries(DSKCFcpp ${OpenCV_LIBS} ${TBB_tbb_LIBRARY_RELEASE})
-#ELSE()
-#	message("DEBUG")
-#    target_link_libraries(DSKCFcpp ${OpenCV_LIBS} ${TBB_tbb_LIBRARY_DEBUG})
-#ENDIF(CMAKE_BUILD_TYPE MATCHES Release)
-
+target_link_libraries(sorttr ${OpenCV_LIBS} ${TBB_LIBRARIES} dlib)
