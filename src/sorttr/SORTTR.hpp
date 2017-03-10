@@ -55,7 +55,7 @@ class SORTTR
 {
 public:
   SORTTR( DetectorType detector, TrackerFactoryType trackerFactory ) :
-    m_nextID( 0 ), m_detector( detector ), m_trackerFactory( trackerFactory )
+    m_nextID( 0 ), m_lambda_term( 20 ), m_detector( detector ), m_trackerFactory( trackerFactory )
   {
   }
 
@@ -65,8 +65,8 @@ public:
     // Run the detector on the given frame
     std::vector< Track > result;
     const std::vector< cv::Rect > detections = this->m_detector( rgb, depth );
-    std::unordered_map< int, std::pair< cv::Rect, TrackerType > > activeTrackers = this->m_activeTrackers;
-    this->m_activeTrackers.clear();
+    std::unordered_map< int, std::pair< cv::Rect, TrackerType > > activeTrackers = std::move( this->m_activeTrackers );
+    //this->m_activeTrackers.clear();
 
     // Update the trackers on the given frame
     std::vector< std::pair< int, cv::Rect > > tracks;
@@ -75,6 +75,10 @@ public:
       if( auto rect = pair.second.second.update( rgb, depth, pair.second.first ) )
       {
         tracks.push_back( { pair.first, *rect } );
+      }
+      else
+      {
+        this->m_lambdas[ pair.first ] = this->m_lambda_term;
       }
     }
 
@@ -110,6 +114,8 @@ public:
       {
         const int trackID = tracks[ assignment.trackIndex ].first;
         this->m_activeTrackers[ trackID ] = activeTrackers[ trackID ];
+        this->m_lambdas[ trackID ] = 0;
+        result.push_back( { trackID, tracks[ assignment.trackIndex ].second } );
       }
     );
 
@@ -138,7 +144,17 @@ public:
     // Suspend unassigned tracks
     for( auto & track : unassignedTracks )
     {
-      this->m_suspendedTrackers[ track.first ] = activeTrackers[ track.first ].second;
+      //this->m_suspendedTrackers[ track.first ] = activeTrackers[ track.first ].second;
+      this->m_lambdas[ track.first ] += 1;
+      if( this->m_lambdas[ track.first ] >= this->m_lambda_term )
+      {
+        this->m_suspendedTrackers[ track.first ] = activeTrackers[ track.first ].second;
+      }
+      else
+      {
+        this->m_activeTrackers[ track.first ] = activeTrackers[ track.first ];
+        result.push_back( { track.first, track.second } );
+      }
     }
 
     // Evaluate suspeded tracks against unassigned detections
@@ -178,7 +194,7 @@ public:
     std::for_each( tr_assignments.begin(), tr_threshold,
       [&]( const Assignment & assignment )
       {
-        if(  assignment.trackIndex < this->m_suspendedTrackers.size() )
+        if( assignment.trackIndex < this->m_suspendedTrackers.size() && assignment.detectionIndex < unassignedDetections.size() )
         {
           auto itr = this->m_suspendedTrackers.begin();
 
@@ -209,6 +225,8 @@ public:
             )
           };
 
+          this->m_lambdas[ id ] = 0;
+
           result.push_back(
             { id, unassignedDetections[ assignment.detectionIndex ] }
           );
@@ -226,8 +244,10 @@ public:
   }
 private:
   int m_nextID;
+  int m_lambda_term;
   DetectorType m_detector;
   TrackerFactoryType m_trackerFactory;
+  std::unordered_map< int, int > m_lambdas;
   std::unordered_map< int, std::pair< cv::Rect, TrackerType > > m_activeTrackers;
   std::unordered_map< int, TrackerType > m_suspendedTrackers;
 };

@@ -25,8 +25,8 @@ Camera::Camera()
   colourMode.setFps( 30 );
   depthMode.setPixelFormat( openni::PIXEL_FORMAT_DEPTH_1_MM );
   colourMode.setPixelFormat( openni::PIXEL_FORMAT_RGB888 );
-  depthMode.setResolution( 320, 240 );
-  colourMode.setResolution( 320, 240 );
+  depthMode.setResolution( 640, 480 );
+  colourMode.setResolution( 640, 480 );
 
   this->m_depth.create( this->m_device, openni::SENSOR_DEPTH );
   this->m_colour.create( this->m_device, openni::SENSOR_COLOR );
@@ -93,6 +93,19 @@ std::vector< cv::Rect > Camera::getFrame( cv::Mat3b & rgb, cv::Mat1w & depth )
   userFrame.release();
 
   cv::cvtColor( rgb, rgb, cv::COLOR_BGR2RGB );
+
+  auto newEnd = std::partition( result.begin(), result.end(),
+    []( const cv::Rect & r ) -> bool
+    {
+      return ( r.area() < 320 * 240 ) &&
+        ( r.area() > 160 * 120 ) &&
+        ( rand() % 6 == 0 ) &&
+        ( static_cast< float >( r.width ) / static_cast< float >( r.height ) > 0.3f ) &&
+        ( static_cast< float >( r.width ) / static_cast< float >( r.height ) < 0.6f );
+    }
+  );
+
+  result.erase( newEnd, result.end() );
 
   return result;
 }

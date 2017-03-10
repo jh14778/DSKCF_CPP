@@ -34,7 +34,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 # add c++11 support
 if(CMAKE_COMPILER_IS_GNUCC)
-    ADD_DEFINITIONS ( -std=c++14 -Wall -ffast-math -O3 )
+    ADD_DEFINITIONS ( -std=c++14 -Wall -O0 -g )
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 # add OpenCV
